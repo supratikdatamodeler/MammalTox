@@ -273,20 +273,18 @@ Important limitations include:
 
 A formal citation to the peer-reviewed MammalTox publication will be added following publication.
 
-Until then, users citing the software should cite the archived software release when a DOI becomes available.
 
 Recommended software citation format:
 
 ```text
 Xin, L., & Kar, S. MammalTox 1.0: Machine-learning platform for
 species-specific mammalian acute toxicity prediction. Version 1.0.
+Github: https://github.com/supratikdatamodeler/MammalTox
+Streamlit: 
 ```
 
-The repository should include a `CITATION.cff` file so that GitHub can provide a **Cite this repository** function.
 
-Do not use a placeholder DOI.
-
-## Authors and affiliation
+## Developers and affiliation
 
 **Lihui Xin**  
 Chemometrics & Molecular Modeling Laboratory  
@@ -294,7 +292,8 @@ Department of Chemistry and Physics
 Kean University, New Jersey, USA  
 Email: `xinl@kean.edu`
 
-**Supratik Kar**  
+**Supratik Kar, Ph.D.**  
+Associate Professor
 Chemometrics & Molecular Modeling Laboratory  
 Department of Chemistry and Physics  
 Kean University, New Jersey, USA  
