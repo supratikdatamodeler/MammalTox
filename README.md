@@ -298,7 +298,7 @@ Kean University, New Jersey, USA
 Email: `xinl@kean.edu`
 
 **Supratik Kar, Ph.D.**  
-Associate Professor
+Associate Professor,
 Chemometrics & Molecular Modeling Laboratory  
 Department of Chemistry and Physics  
 Kean University, New Jersey, USA  
