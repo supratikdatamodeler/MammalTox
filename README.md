@@ -4,6 +4,10 @@
 
 MammalTox 1.0 is a browser-based machine-learning application for predicting **intravenous acute toxicity (LD50 classification)** across six mammalian species. The platform integrates molecular-structure validation, endpoint-specific Mordred descriptor calculation, trained machine-learning classifiers, applicability-domain assessment, chemical-space visualization, and model interpretation in a single research-oriented interface.
 
+### Web Application
+
+Access MammalTox here: https://mammaltox.streamlit.app
+
 ## Supported endpoints
 
 | Species | Endpoint | Model |
