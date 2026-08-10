@@ -8,6 +8,21 @@ MammalTox 1.0 is a browser-based machine-learning application for predicting **i
 
 Access MammalTox 1.0 here: https://mammaltox.streamlit.app
 
+## Citation
+
+A formal citation to the peer-reviewed MammalTox publication will be added following publication.
+
+
+Recommended software citation format:
+
+```text
+Xin, L., & Kar, S. MammalTox 1.0: Machine-learning platform for
+species-specific mammalian acute toxicity prediction. Version 1.0.
+Github: https://github.com/supratikdatamodeler/MammalTox
+Streamlit: https://mammaltox.streamlit.app/ 
+```
+
+
 ## Supported endpoints
 
 | Species | Endpoint | Model |
@@ -272,20 +287,6 @@ Important limitations include:
 - Input structures that cannot be parsed or represented by the required molecular descriptors cannot be evaluated.
 - Large batch calculations, particularly SHAP analyses, may require substantial computational resources.
 - MammalTox should not be used as the sole basis for clinical, regulatory, environmental, or safety-critical decisions.
-
-## Citation
-
-A formal citation to the peer-reviewed MammalTox publication will be added following publication.
-
-
-Recommended software citation format:
-
-```text
-Xin, L., & Kar, S. MammalTox 1.0: Machine-learning platform for
-species-specific mammalian acute toxicity prediction. Version 1.0.
-Github: https://github.com/supratikdatamodeler/MammalTox
-Streamlit: 
-```
 
 
 ## Developers and affiliation
