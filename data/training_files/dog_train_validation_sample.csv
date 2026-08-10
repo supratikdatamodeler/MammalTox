@@ -1,0 +1,6 @@
+ID,SMILES,Class,source_subset
+TOX-4318,CC(O)CO,0,train
+TOX-5527,CC(=O)OCC(O)CO,0,train
+TOX-75527,NC(=O)CN1CC(O)CC1=O,0,train
+TOX-5811,OCCOCCOCCO,0,train
+TOX-3535,COC1(NC(=O)Cc2cccs2)C(=O)N2C(C(=O)O)=C(COC(N)=O)CSC21,0,train

@@ -1,0 +1,6 @@
+ID,SMILES,Class,source_subset
+TOX-11464,N#CC1CC2CCC1C2,1,test
+TOX-61314,O=C(NCC=CBr)Oc1cccc2ccccc12,1,test
+TOX-62240,OC(CN1CCCCC1)c1ccccn1,1,test
+TOX-24512,C(=Nc1ccccn1)c1c[nH]c2ccccc12,0,test
+TOX-16706,CCN(CC)CCN(C(=O)c1ccc([N+](=O)[O-])cc1)c1ccccc1,1,test
