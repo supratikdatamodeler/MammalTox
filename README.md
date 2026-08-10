@@ -6,7 +6,7 @@ MammalTox 1.0 is a browser-based machine-learning application for predicting **i
 
 ### Web Application
 
-Access MammalTox here: https://mammaltox.streamlit.app
+Access MammalTox 1.0 here: https://mammaltox.streamlit.app
 
 ## Supported endpoints
 
