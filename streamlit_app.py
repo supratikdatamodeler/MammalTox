@@ -965,7 +965,7 @@ with tabs[0]:
                 ):
                     synchronize_pasted_smiles()
                     identifier = str(compound_identifier or "").strip() or "Compound_001"
-                    store_defined_compounds(
+                    stored_compound = store_defined_compounds(
                         pd.DataFrame(
                             [
                                 {
@@ -977,6 +977,13 @@ with tabs[0]:
                             ]
                         )
                     )
+                    if input_summary(stored_compound)["valid"] == 1:
+                        st.success(
+                            "**Compound ready for prediction**\n\n"
+                            "The validated structure has been saved. Go to the Prediction tab "
+                            "to select one or all species endpoints and run the prediction.",
+                            icon=":material/check_circle:",
+                        )
 
     else:
         st.session_state.batch_smiles_input = str(
@@ -1026,7 +1033,24 @@ with tabs[0]:
                     key="confirm_pasted_batch",
                 ):
                     preserve_batch_smiles_draft()
-                    store_defined_compounds(parse_smi_text(batch_text, "Compound"))
+                    stored_batch = store_defined_compounds(parse_smi_text(batch_text, "Compound"))
+                    stored_summary = input_summary(stored_batch)
+                    if stored_summary["valid"]:
+                        if stored_summary["failed"]:
+                            batch_ready_text = (
+                                "Valid compounds have been saved and are ready for prediction. "
+                                "Review the invalid records before continuing. Go to the Prediction "
+                                "tab to select one or all species endpoints and run the prediction."
+                            )
+                        else:
+                            batch_ready_text = (
+                                "Valid compounds have been saved. Go to the Prediction tab to select "
+                                "one or all species endpoints and run the prediction."
+                            )
+                        st.success(
+                            f"**Batch ready for prediction**\n\n{batch_ready_text}",
+                            icon=":material/check_circle:",
+                        )
 
         with upload_panel:
             with st.container(border=True):
@@ -1053,10 +1077,27 @@ with tabs[0]:
                 if uploaded is not None:
                     signature = (uploaded.name, uploaded.size)
                     if st.session_state.get("last_upload_signature") != signature:
-                        store_defined_compounds(
+                        stored_batch = store_defined_compounds(
                             parse_uploaded_file(uploaded.name, uploaded.getvalue())
                         )
                         st.session_state.last_upload_signature = signature
+                        stored_summary = input_summary(stored_batch)
+                        if stored_summary["valid"]:
+                            if stored_summary["failed"]:
+                                batch_ready_text = (
+                                    "Valid compounds have been saved and are ready for prediction. "
+                                    "Review the invalid records before continuing. Go to the Prediction "
+                                    "tab to select one or all species endpoints and run the prediction."
+                                )
+                            else:
+                                batch_ready_text = (
+                                    "Valid compounds have been saved. Go to the Prediction tab to select "
+                                    "one or all species endpoints and run the prediction."
+                                )
+                            st.success(
+                                f"**Batch ready for prediction**\n\n{batch_ready_text}",
+                                icon=":material/check_circle:",
+                            )
 
     st.markdown("### Current defined structures")
     render_defined_structures(st.session_state.defined_compounds)
