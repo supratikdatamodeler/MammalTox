@@ -110,6 +110,103 @@ st.markdown(
     .descriptor-definition-table th {background: #f7f8f9; color: #33414c; font-weight: 600;}
     .descriptor-definition-table th:first-child, .descriptor-definition-table td:first-child {width: 28%;}
     .descriptor-definition-table th:last-child, .descriptor-definition-table td:last-child {width: 72%;}
+    .prediction-results-table-wrap {max-width: 100%; width: 100%;}
+    .prediction-results-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #1f2b33;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        table-layout: fixed;
+        width: 100%;
+    }
+    .prediction-results-table th,
+    .prediction-results-table td {
+        border-bottom: 1px solid #e1e6e9;
+        padding: 0.75rem 0.34rem;
+        text-align: left;
+        vertical-align: top;
+    }
+    .prediction-results-table th {
+        background: #f5f7f8;
+        border-top: 1px solid #d9e0e4;
+        color: #1f2b33;
+        font-size: 0.9375rem;
+        font-weight: 650;
+        overflow-wrap: normal;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    .prediction-results-table td {overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+    .prediction-results-table td:nth-child(n+3) {text-align: center;}
+    .prediction-results-table td:nth-child(2) {white-space: normal;}
+    .prediction-cell-value {display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+    .prediction-results-table td:nth-child(2) .prediction-cell-value {overflow-wrap: anywhere; text-overflow: clip; white-space: normal;}
+    .prediction-results-table th:first-child {border-left: 1px solid #d9e0e4; border-radius: 6px 0 0 0;}
+    .prediction-results-table th:last-child {border-right: 1px solid #d9e0e4; border-radius: 0 6px 0 0;}
+    .prediction-results-table td:first-child {border-left: 1px solid #e1e6e9;}
+    .prediction-results-table td:last-child {border-right: 1px solid #e1e6e9;}
+    .prediction-results-table tbody tr:last-child td:first-child {border-radius: 0 0 0 6px;}
+    .prediction-results-table tbody tr:last-child td:last-child {border-radius: 0 0 6px 0;}
+    .prediction-status {
+        border: 1px solid transparent;
+        border-radius: 4px;
+        display: inline-block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.25;
+        max-width: 100%;
+        overflow: hidden;
+        padding: 0.2rem 0.34rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .prediction-results-explanation {color: #35434c; font-size: 0.9375rem; line-height: 1.45; margin: 0.15rem 0 0.7rem;}
+    .prediction-status-low {background: #e8f0ea; border-color: #c4d5c8; color: #466452;}
+    .prediction-status-high {background: #f3e6e3; border-color: #d9bbb6; color: #874e48;}
+    .prediction-status-in-ad {background: #e8f0ea; border-color: #c4d5c8; color: #466452;}
+    .prediction-status-out-ad {background: #f4ebdd; border-color: #ddc9a5; color: #765b32;}
+    @media (max-width: 700px) {
+        .prediction-results-table colgroup,
+        .prediction-results-table thead {
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            height: 1px;
+            overflow: hidden;
+            position: absolute;
+            white-space: nowrap;
+            width: 1px;
+        }
+        .prediction-results-table,
+        .prediction-results-table tbody,
+        .prediction-results-table tr,
+        .prediction-results-table td {display: block; width: 100%;}
+        .prediction-results-table {font-size: 0.9375rem;}
+        .prediction-results-table tbody tr {
+            border: 1px solid #dfe4e7;
+            border-radius: 6px;
+            margin-bottom: 0.7rem;
+        }
+        .prediction-results-table td {
+            border: 0;
+            border-bottom: 1px solid #edf0f2;
+            box-sizing: border-box;
+            display: grid;
+            gap: 0.55rem;
+            grid-template-columns: minmax(7.7rem, 38%) minmax(0, 1fr);
+            padding: 0.65rem 0.58rem;
+        }
+        .prediction-results-table td::before {
+            color: #52616b;
+            content: attr(data-label);
+            font-size: 0.875rem;
+            font-weight: 650;
+        }
+        .prediction-results-table td:first-child,
+        .prediction-results-table td:last-child {border-left: 0; border-right: 0;}
+        .prediction-results-table tbody tr td:last-child {border-bottom: 0;}
+    }
     .shap-view-title {color: #1f2933; font-size: 1.55rem; font-weight: 650; line-height: 1.2; margin: 1rem 0 0.35rem;}
     .pca-view-title {margin-bottom: -0.2rem;}
     .single-structure-panel-heading {
@@ -399,31 +496,74 @@ def final_model_performance_table(metric_summary: pd.DataFrame) -> pd.DataFrame:
     return transposed
 
 
-def prediction_label_table(frame: pd.DataFrame):
-    """Apply restrained browser-only color cues to predicted toxicity labels."""
-    label_columns = ["Prediction"] if "Prediction" in frame.columns else []
-    if frame.empty or not label_columns:
-        return frame
+def render_prediction_results_table(frame: pd.DataFrame) -> None:
+    """Render a static, width-fitted browser table without changing result data."""
+    display = frame.rename(
+        columns={
+            "Input SMILES": "SMILES",
+            "Predicted-class probability": "Probability",
+            "Error Message": "Error",
+        }
+    )
+    columns = [
+        "Compound ID",
+        "SMILES",
+        "Species",
+        "Route",
+        "Endpoint",
+        "Model",
+        "Prediction",
+        "Probability",
+        "AD Status",
+        "Error",
+    ]
+    display = display.loc[:, [column for column in columns if column in display.columns]]
 
-    def label_style(value) -> str:
-        normalized = str(value).strip().lower()
-        if normalized == "low toxicity":
-            return "background-color: #E8F0EA; color: #466452; border: 1px solid #C4D5C8;"
-        if normalized == "high toxicity":
-            return "background-color: #F3E6E3; color: #874E48; border: 1px solid #D9BBB6;"
-        return ""
+    widths = [10, 17, 8, 8, 8, 8, 10, 10, 10, 11]
+    colgroup = "".join(f'<col style="width:{width}%">' for width in widths)
+    ad_help = (
+        "Applicability-domain status indicates whether the query lies within the "
+        "chemical-space coverage of the endpoint model's training data."
+    )
+    headers = "".join(
+        f'<th scope="col"{f" title={json.dumps(ad_help)}" if column == "AD Status" else ""}>'
+        f"{html.escape(column)}</th>"
+        for column in display.columns
+    )
 
-    def ad_style(value) -> str:
-        if value == "In AD":
-            return "background-color: #E8F0EA; color: #466452; border: 1px solid #C4D5C8;"
-        if value == "Out of AD":
-            return "background-color: #F4EBDD; color: #765B32; border: 1px solid #DDC9A5;"
-        return ""
+    def formatted_cell(column: str, value) -> str:
+        text = "" if pd.isna(value) else str(value)
+        escaped = html.escape(text)
+        status_class = ""
+        if column == "Prediction":
+            status_class = {
+                "Low toxicity": "prediction-status-low",
+                "High toxicity": "prediction-status-high",
+            }.get(text, "")
+        elif column == "AD Status":
+            status_class = {
+                "In AD": "prediction-status-in-ad",
+                "Out of AD": "prediction-status-out-ad",
+            }.get(text, "")
+        if status_class:
+            escaped = f'<span class="prediction-status {status_class}">{escaped}</span>'
+        else:
+            escaped = f'<span class="prediction-cell-value">{escaped}</span>'
+        title = f' title="{html.escape(text, quote=True)}"' if column == "Error" else ""
+        return f'<td data-label="{html.escape(column, quote=True)}"{title}>{escaped}</td>'
 
-    styled = frame.style.map(label_style, subset=label_columns)
-    if "AD Status" in frame.columns:
-        styled = styled.map(ad_style, subset=["AD Status"])
-    return styled
+    rows = "".join(
+        "<tr>"
+        + "".join(formatted_cell(column, row[column]) for column in display.columns)
+        + "</tr>"
+        for _, row in display.iterrows()
+    )
+    st.html(
+        '<div class="prediction-results-table-wrap">'
+        '<table class="prediction-results-table" aria-label="MammalTox prediction results">'
+        f"<colgroup>{colgroup}</colgroup><thead><tr>{headers}</tr></thead>"
+        f"<tbody>{rows}</tbody></table></div>"
+    )
 
 
 def model_display_order(performance_table: pd.DataFrame) -> list[str]:
@@ -624,6 +764,32 @@ def input_summary(frame: pd.DataFrame) -> dict[str, int]:
     }
 
 
+def render_batch_submission_status(summary: dict[str, int]) -> None:
+    """Show exactly one status message for the accepted batch."""
+    valid = summary["valid"]
+    invalid = summary["failed"]
+    if valid and not invalid:
+        st.success(
+            "**Batch ready for prediction**\n\n"
+            "All valid compounds have been saved. Go to the Prediction tab to select "
+            "one or all species endpoints and run the prediction.",
+            icon=":material/check_circle:",
+        )
+    elif valid:
+        st.warning(
+            "**Batch partially ready for prediction**\n\n"
+            f"{valid} valid compound(s) have been saved and can be used for prediction. "
+            f"Review the {invalid} invalid record(s) before continuing, or proceed to "
+            "the Prediction tab with the valid compounds only.",
+            icon=":material/warning:",
+        )
+    else:
+        st.error(
+            "No valid compounds are available for prediction. Review the invalid "
+            "records and submit valid structures before continuing."
+        )
+
+
 def render_defined_structures(frame: pd.DataFrame) -> None:
     if frame.empty:
         st.info("No structures have been defined yet.")
@@ -640,13 +806,6 @@ def render_defined_structures(frame: pd.DataFrame) -> None:
         hide_index=True,
         width="stretch",
     )
-    if summary["failed"]:
-        st.error(
-            "The submitted SMILES could not be processed. Please provide a valid "
-            "single-compound SMILES."
-        )
-    if summary["duplicates"]:
-        st.warning("Duplicate canonical structures were detected and retained for prediction.")
 
 
 def synchronize_pasted_smiles() -> None:
@@ -1008,24 +1167,37 @@ with tabs[0]:
                     on_change=preserve_batch_smiles_draft,
                 )
                 st.caption("Enter one SMILES per line with an optional compound ID or name.")
+                batch_preview_placeholder = st.empty()
                 if str(batch_text).strip():
                     batch_preview = validate_compound_inputs(
                         parse_smi_text(batch_text, "Compound")
                     )
                     batch_summary = input_summary(batch_preview)
-                    st.caption(
-                        f"{batch_summary['total']} records · {batch_summary['valid']} valid · "
-                        f"{batch_summary['failed']} invalid · {batch_summary['duplicates']} duplicates"
+                    batch_is_stored = (
+                        not st.session_state.defined_compounds.empty
+                        and batch_preview.equals(st.session_state.defined_compounds)
                     )
-                    st.dataframe(
-                        compact_user_table(
-                            batch_preview,
-                            ["Compound_ID", "Input_SMILES", "Canonical_SMILES", "Input_Status"],
-                        ),
-                        hide_index=True,
-                        width="stretch",
-                        height=min(260, 38 + 35 * len(batch_preview)),
-                    )
+                    if not batch_is_stored:
+                        with batch_preview_placeholder.container():
+                            st.caption(
+                                f"{batch_summary['total']} records · {batch_summary['valid']} valid · "
+                                f"{batch_summary['failed']} invalid · "
+                                f"{batch_summary['duplicates']} duplicates"
+                            )
+                            st.dataframe(
+                                compact_user_table(
+                                    batch_preview,
+                                    [
+                                        "Compound_ID",
+                                        "Input_SMILES",
+                                        "Canonical_SMILES",
+                                        "Input_Status",
+                                    ],
+                                ),
+                                hide_index=True,
+                                width="stretch",
+                                height=min(260, 38 + 35 * len(batch_preview)),
+                            )
                 if st.button(
                     "Use pasted batch",
                     type="primary",
@@ -1034,23 +1206,9 @@ with tabs[0]:
                 ):
                     preserve_batch_smiles_draft()
                     stored_batch = store_defined_compounds(parse_smi_text(batch_text, "Compound"))
+                    batch_preview_placeholder.empty()
                     stored_summary = input_summary(stored_batch)
-                    if stored_summary["valid"]:
-                        if stored_summary["failed"]:
-                            batch_ready_text = (
-                                "Valid compounds have been saved and are ready for prediction. "
-                                "Review the invalid records before continuing. Go to the Prediction "
-                                "tab to select one or all species endpoints and run the prediction."
-                            )
-                        else:
-                            batch_ready_text = (
-                                "Valid compounds have been saved. Go to the Prediction tab to select "
-                                "one or all species endpoints and run the prediction."
-                            )
-                        st.success(
-                            f"**Batch ready for prediction**\n\n{batch_ready_text}",
-                            icon=":material/check_circle:",
-                        )
+                    render_batch_submission_status(stored_summary)
 
         with upload_panel:
             with st.container(border=True):
@@ -1082,22 +1240,7 @@ with tabs[0]:
                         )
                         st.session_state.last_upload_signature = signature
                         stored_summary = input_summary(stored_batch)
-                        if stored_summary["valid"]:
-                            if stored_summary["failed"]:
-                                batch_ready_text = (
-                                    "Valid compounds have been saved and are ready for prediction. "
-                                    "Review the invalid records before continuing. Go to the Prediction "
-                                    "tab to select one or all species endpoints and run the prediction."
-                                )
-                            else:
-                                batch_ready_text = (
-                                    "Valid compounds have been saved. Go to the Prediction tab to select "
-                                    "one or all species endpoints and run the prediction."
-                                )
-                            st.success(
-                                f"**Batch ready for prediction**\n\n{batch_ready_text}",
-                                icon=":material/check_circle:",
-                            )
+                        render_batch_submission_status(stored_summary)
 
     st.markdown("### Current defined structures")
     render_defined_structures(st.session_state.defined_compounds)
@@ -1172,33 +1315,13 @@ with tabs[2]:
                 f"{len(genuine_failures)} endpoint prediction(s) could not be completed. "
                 "Successful results remain available below."
             )
-        st.caption(
-            "Predicted-class probability is the probability assigned by the model to the displayed "
-            "predicted class; it is a model output, not experimental certainty."
+        st.markdown(
+            '<p class="prediction-results-explanation">Predicted-class probability is the '
+            "probability assigned by the model to the displayed predicted class; it is a model "
+            "output, not experimental certainty.</p>",
+            unsafe_allow_html=True,
         )
-        st.dataframe(
-            prediction_label_table(browser_output),
-            hide_index=True,
-            width="stretch",
-            column_config={
-                "Compound ID": st.column_config.TextColumn(width="medium"),
-                "Input SMILES": st.column_config.TextColumn(width="large"),
-                "Species": st.column_config.TextColumn(width="small"),
-                "Route": st.column_config.TextColumn(width="medium"),
-                "Endpoint": st.column_config.TextColumn(width="small"),
-                "Model": st.column_config.TextColumn(width="medium"),
-                "Prediction": st.column_config.TextColumn(width="small"),
-                "Predicted-class probability": st.column_config.TextColumn(width="large"),
-                "AD Status": st.column_config.TextColumn(
-                    width="medium",
-                    help=(
-                        "Applicability-domain status indicates whether the query lies within the "
-                        "chemical-space coverage of the endpoint model's training data."
-                    ),
-                ),
-                "Error Message": st.column_config.TextColumn(width="large"),
-            },
-        )
+        render_prediction_results_table(browser_output)
         render_ad_information_card()
 
         if not genuine_failures.empty:
@@ -1668,16 +1791,27 @@ with tabs[4]:
 
 with tabs[5]:
     st.subheader("About MammalTox 1.0")
-    st.write(
-        "MammalTox 1.0 is an ML-based web application for species-specific prediction of mammalian acute intravenous toxicity."
+    st.markdown(
+        """
+        - Machine-learning web platform for species-specific intravenous acute toxicity prediction.
+        - Supports six mammalian species: cat, dog, guinea pig, mouse, rabbit, and rat.
+        - Predictions are reported as endpoint-relative **Low toxicity** or **High toxicity**.
+        - Provides predicted-class probability, applicability-domain assessment, PCA-based chemical-space visualization, and SHAP-based model interpretation.
+        """
     )
-    st.write(
-        "MammalTox 1.0 validates and standardizes input structures with RDKit, calculates the "
-        "endpoint-specific Mordred descriptors used during training, aligns the required features, "
-        "and applies the saved model."
-    )
-    st.write(
-        "Prediction classes are presented as Low toxicity and High toxicity."
+    st.markdown(
+        """
+        **How to cite**
+
+        **Software citation**
+
+        Xin, L. & Kar, S. MammalTox 1.0. Version 1.0.  
+        [https://mammaltox.streamlit.app/](https://mammaltox.streamlit.app/) (2026).
+
+        **Associated manuscript**
+
+        Xin, L. & Kar, S. *MammalTox 1.0: an interpretable web platform for species-specific intravenous acute toxicity prediction and cross-species concordance analysis.* Manuscript under review at *Scientific Reports*.
+        """
     )
     st.markdown(
         """
