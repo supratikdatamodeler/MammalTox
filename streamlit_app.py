@@ -50,7 +50,12 @@ from utils.structure_input import (
     validate_single_smiles_input,
     validate_compound_inputs,
 )
-from utils.visualizations import batch_shap_figure, local_shap_figure, pca_chemical_space_figure
+from utils.visualizations import (
+    batch_shap_figure,
+    local_shap_figure,
+    pca_chemical_space_figure,
+    shap_plot_context,
+)
 
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
@@ -1416,27 +1421,16 @@ with tabs[2]:
                     render_local_shap_summary(
                         bundle.results, selected_model_id, shap_data, 0
                     )
-                    shap_figure = None
-                    try:
+                    with shap_plot_context():
                         shap_figure = local_shap_figure(shap_data)
-                    except IndexError:
-                        st.warning(
-                            "The individual SHAP waterfall plot could not be "
-                            "displayed because of a plotting error. "
-                            "Prediction results remain available."
+                        st.pyplot(
+                            shap_figure,
+                            clear_figure=True,
+                            width="stretch",
+                            dpi=300,
+                            bbox_inches="tight",
                         )
-                    else:
-                        if shap_figure is not None:
-                            st.pyplot(
-                                shap_figure,
-                                clear_figure=True,
-                                width="stretch",
-                                dpi=300,
-                                bbox_inches="tight",
-                            )
-                    finally:
-                        if shap_figure is not None:
-                            plt.close(shap_figure)
+                        plt.close(shap_figure)
                     if "TreeExplainer was incompatible" in str(shap_data.get("fallback_reason", "")):
                         st.caption(
                             "TreeExplainer is unavailable for this saved model in the current library "
@@ -1455,15 +1449,16 @@ with tabs[2]:
                         f"Compounds explained: "
                         f"{shap_data.get('explained_query_count', len(shap_data['query_ids']))}"
                     )
-                    shap_figure = batch_shap_figure(shap_data)
-                    st.pyplot(
-                        shap_figure,
-                        clear_figure=True,
-                        width="stretch",
-                        dpi=300,
-                        bbox_inches="tight",
-                    )
-                    plt.close(shap_figure)
+                    with shap_plot_context():
+                        shap_figure = batch_shap_figure(shap_data)
+                        st.pyplot(
+                            shap_figure,
+                            clear_figure=True,
+                            width="stretch",
+                            dpi=300,
+                            bbox_inches="tight",
+                        )
+                        plt.close(shap_figure)
                     if "TreeExplainer was incompatible" in str(shap_data.get("fallback_reason", "")):
                         st.caption(
                             "TreeExplainer is unavailable for this saved model in the current library "
@@ -1486,15 +1481,16 @@ with tabs[2]:
                     render_local_shap_summary(
                         bundle.results, selected_model_id, shap_data, selected_index
                     )
-                    local_figure = local_shap_figure(shap_data, selected_index)
-                    st.pyplot(
-                        local_figure,
-                        clear_figure=True,
-                        width="stretch",
-                        dpi=300,
-                        bbox_inches="tight",
-                    )
-                    plt.close(local_figure)
+                    with shap_plot_context():
+                        local_figure = local_shap_figure(shap_data, selected_index)
+                        st.pyplot(
+                            local_figure,
+                            clear_figure=True,
+                            width="stretch",
+                            dpi=300,
+                            bbox_inches="tight",
+                        )
+                        plt.close(local_figure)
 
 with tabs[3]:
     st.subheader("Model information")
