@@ -1416,15 +1416,27 @@ with tabs[2]:
                     render_local_shap_summary(
                         bundle.results, selected_model_id, shap_data, 0
                     )
-                    shap_figure = local_shap_figure(shap_data)
-                    st.pyplot(
-                        shap_figure,
-                        clear_figure=True,
-                        width="stretch",
-                        dpi=300,
-                        bbox_inches="tight",
-                    )
-                    plt.close(shap_figure)
+                    shap_figure = None
+                    try:
+                        shap_figure = local_shap_figure(shap_data)
+                    except IndexError:
+                        st.warning(
+                            "The individual SHAP waterfall plot could not be "
+                            "displayed because of a plotting error. "
+                            "Prediction results remain available."
+                        )
+                    else:
+                        if shap_figure is not None:
+                            st.pyplot(
+                                shap_figure,
+                                clear_figure=True,
+                                width="stretch",
+                                dpi=300,
+                                bbox_inches="tight",
+                            )
+                    finally:
+                        if shap_figure is not None:
+                            plt.close(shap_figure)
                     if "TreeExplainer was incompatible" in str(shap_data.get("fallback_reason", "")):
                         st.caption(
                             "TreeExplainer is unavailable for this saved model in the current library "
