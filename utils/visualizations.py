@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from functools import wraps
+from threading import RLock
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,6 +18,32 @@ POSITIVE_COLOR = "#C2546D"
 NEGATIVE_COLOR = "#3478A8"
 TEXT_COLOR = "#25313B"
 GRID_COLOR = "#E7EAED"
+
+# Streamlit also closes all pyplot figures at the end of each session rerun.
+# Its cleanup must use the same lock as chart creation and serialization.
+_SHAP_PLOT_LOCK = getattr(plt.close, "_mammaltox_plot_lock", RLock())
+if not hasattr(plt.close, "_mammaltox_plot_lock"):
+    _original_close = plt.close
+
+    @wraps(_original_close)
+    def _synchronized_close(*args, **kwargs):
+        with _SHAP_PLOT_LOCK:
+            return _original_close(*args, **kwargs)
+
+    _synchronized_close._mammaltox_plot_lock = _SHAP_PLOT_LOCK
+    plt.close = _synchronized_close
+
+
+@contextmanager
+def shap_plot_context():
+    """Serialize pyplot creation, Streamlit serialization, and figure cleanup."""
+    with _SHAP_PLOT_LOCK:
+        existing_figures = set(plt.get_fignums())
+        try:
+            yield
+        finally:
+            for number in set(plt.get_fignums()) - existing_figures:
+                plt.close(number)
 
 
 def _is_shap_math_label(value: str) -> bool:
