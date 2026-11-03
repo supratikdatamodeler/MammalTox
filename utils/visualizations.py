@@ -212,7 +212,11 @@ def batch_shap_figure(artifact: dict, max_display: int = 15):
         axis = fig.axes[0]
         axis.axvline(0, color=TEXT_COLOR, linewidth=1.0, zorder=1)
         axis.set_title("")
-        axis.set_xlabel(f"SHAP contribution to High toxicity {output_label}")
+        axis.set_xlabel(
+            "SHAP contribution to High-toxicity score (Class 1)"
+            if output_space == "probability"
+            else f"SHAP contribution to High toxicity {output_label}"
+        )
         axis.grid(axis="x", color=GRID_COLOR, linewidth=0.7, zorder=0)
         axis.tick_params(colors=TEXT_COLOR)
         if len(fig.axes) > 1:

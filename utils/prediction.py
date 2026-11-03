@@ -530,7 +530,8 @@ TECHNICAL_COLUMN_LABELS = {
     "Endpoint": "Endpoint",
     "Model": "Model",
     "Predicted_Label": "Prediction",
-    "Predicted_Class_Probability": "Predicted-class probability",
+    "Predicted_Class_Probability": "Predicted-class score",
+    "Toxicity_Probability": "Score_class_1",
     "AD_Status": "AD status",
     "AD_Distance": "AD distance",
     "AD_Threshold": "AD threshold",
@@ -541,6 +542,10 @@ TECHNICAL_COLUMN_LABELS = {
 def technical_output_table(results: pd.DataFrame) -> pd.DataFrame:
     """Return the streamlined user-facing prediction download table."""
     output = prediction_output_table(results)
+    # Keep the class-1 score numeric and at its original backend precision.
+    output["Toxicity_Probability"] = pd.to_numeric(
+        results["Toxicity_Probability"], errors="coerce"
+    ).where(pd.to_numeric(results["Predicted_Class"], errors="coerce").notna())
     columns = [column for column in TECHNICAL_COLUMN_LABELS if column in output.columns]
     return output.loc[:, columns].rename(columns=TECHNICAL_COLUMN_LABELS)
 
@@ -606,7 +611,7 @@ def main_results_table(results: pd.DataFrame) -> pd.DataFrame:
             "Endpoint": output.get("Endpoint", "Not available"),
             "Model": output.get("Model", "Not available"),
             "Prediction": prediction,
-            "Predicted-class probability": displayed_probability,
+            "Predicted-class score": displayed_probability,
             "AD Status": ad_status,
             "Error Message": error_messages,
         }

@@ -110,7 +110,13 @@ st.markdown(
     .descriptor-definition-table th {background: #f7f8f9; color: #33414c; font-weight: 600;}
     .descriptor-definition-table th:first-child, .descriptor-definition-table td:first-child {width: 28%;}
     .descriptor-definition-table th:last-child, .descriptor-definition-table td:last-child {width: 72%;}
-    .prediction-results-table-wrap {max-width: 100%; width: 100%;}
+    .prediction-results-table-wrap {
+        max-height: 520px;
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        width: 100%;
+    }
     .prediction-results-table {
         border-collapse: separate;
         border-spacing: 0;
@@ -120,6 +126,7 @@ st.markdown(
         table-layout: fixed;
         width: 100%;
     }
+    .prediction-results-table thead {position: sticky; top: 0; z-index: 1;}
     .prediction-results-table th,
     .prediction-results-table td {
         border-bottom: 1px solid #e1e6e9;
@@ -138,6 +145,7 @@ st.markdown(
         vertical-align: middle;
         white-space: nowrap;
     }
+    .prediction-results-table th:nth-child(8) {white-space: normal; overflow-wrap: anywhere;}
     .prediction-results-table td {overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
     .prediction-results-table td:nth-child(n+3) {text-align: center;}
     .prediction-results-table td:nth-child(2) {white-space: normal;}
@@ -501,7 +509,6 @@ def render_prediction_results_table(frame: pd.DataFrame) -> None:
     display = frame.rename(
         columns={
             "Input SMILES": "SMILES",
-            "Predicted-class probability": "Probability",
             "Error Message": "Error",
         }
     )
@@ -513,7 +520,7 @@ def render_prediction_results_table(frame: pd.DataFrame) -> None:
         "Endpoint",
         "Model",
         "Prediction",
-        "Probability",
+        "Predicted-class score",
         "AD Status",
         "Error",
     ]
@@ -713,9 +720,9 @@ def render_local_shap_summary(
     summary_columns = st.columns(4)
     summary_columns[0].metric("Predicted class", predicted_class)
     if output_space == "probability":
-        summary_columns[1].metric("High toxicity probability", f"{predicted_output:.4f}")
+        summary_columns[1].metric("High-toxicity score (Class 1)", f"{predicted_output:.4f}")
         summary_columns[2].metric(
-            "Baseline High toxicity probability", f"{base_value:.4f}"
+            "Baseline High-toxicity score", f"{base_value:.4f}"
         )
     else:
         summary_columns[1].metric("Predicted model score", f"{predicted_output:.4f}")
@@ -1316,9 +1323,11 @@ with tabs[2]:
                 "Successful results remain available below."
             )
         st.markdown(
-            '<p class="prediction-results-explanation">Predicted-class probability is the '
-            "probability assigned by the model to the displayed predicted class; it is a model "
-            "output, not experimental certainty.</p>",
+            '<p class="prediction-results-explanation">Predicted-class score is the model '
+            "output assigned to the displayed predicted class. The downloadable Score_class_1 "
+            "represents High toxicity (Class 1), regardless of the predicted class. Scores have "
+            "not been independently validated for probability calibration and should not be "
+            "directly compared across species.</p>",
             unsafe_allow_html=True,
         )
         render_prediction_results_table(browser_output)
@@ -1336,7 +1345,7 @@ with tabs[2]:
         downloads = st.columns(2)
         with downloads[0]:
             st.download_button(
-                "Download Prediction Results",
+                "Download CSV Results",
                 data=technical_output.to_csv(index=False).encode("utf-8"),
                 file_name="MammalTox_1.0_prediction_results.csv",
                 mime="text/csv",
@@ -1344,7 +1353,7 @@ with tabs[2]:
             )
         with downloads[1]:
             st.download_button(
-                "Download Excel results",
+                "Download Excel Results",
                 data=to_excel_bytes(technical_output),
                 file_name="MammalTox_1.0_prediction_results.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1383,6 +1392,10 @@ with tabs[2]:
                         pca_figure,
                         width="stretch",
                         config={"displayModeBar": False, "responsive": True},
+                    )
+                    st.caption(
+                        "The 2D PCA plot is for visualization only and does not determine "
+                        "applicability-domain (AD) status."
                     )
 
             shap_data = bundle.shap_artifacts.get(selected_model_id, {})
@@ -1796,7 +1809,7 @@ with tabs[5]:
         - Machine-learning web platform for species-specific intravenous acute toxicity prediction.
         - Supports six mammalian species: cat, dog, guinea pig, mouse, rabbit, and rat.
         - Predictions are reported as endpoint-relative **Low toxicity** or **High toxicity**.
-        - Provides predicted-class probability, applicability-domain assessment, PCA-based chemical-space visualization, and SHAP-based model interpretation.
+        - Provides predicted-class score, applicability-domain assessment, PCA-based chemical-space visualization, and SHAP-based model interpretation.
         """
     )
     st.markdown(
